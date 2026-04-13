@@ -32,6 +32,7 @@ class Booking extends ActiveRecord
             // Dauer min 1h, max. 6h
             ['end_time', 'validateDuration'],
             ['start_time', 'validateBookingDate'],
+            [['user_id'], 'integer'],
         ];
     }
 

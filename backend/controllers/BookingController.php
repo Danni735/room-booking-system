@@ -68,6 +68,7 @@ class BookingController extends ActiveController
                 'start' => str_replace(' ', 'T', $b->start_time),
                 'end'   => str_replace(' ', 'T', $b->end_time),
                 'annotation' => $b->annotation,
+                'user_id'    => $b->user_id,
             ];
         }, $bookings);
     }
@@ -86,6 +87,7 @@ class BookingController extends ActiveController
         $booking->start_time = $data['start_time']  ?? '';
         $booking->end_time   = $data['end_time']    ?? '';
         $booking->annotation = $data['annotation'] ?? null;
+        $booking->user_id = Yii::$app->user->isGuest ? null : (Yii::$app->user->identity->student_id ?? Yii::$app->user->identity->personal_id ?? null);
 
         // Rückgabe
         if ($booking->save()) {
@@ -97,6 +99,7 @@ class BookingController extends ActiveController
                 'end'          => str_replace(' ', 'T', $booking->end_time),
                 'cancel_token' => $booking->cancel_token,
                 'annotation' => $booking->annotation,
+                'user_id' => $booking->user_id,
             ];
         }
 

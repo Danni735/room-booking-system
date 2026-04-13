@@ -5,13 +5,20 @@
 $this->title = 'Room Booking System - Daniela Porrello';
 
 use frontend\assets\CalendarAsset;
-CalendarAsset::register($this);
-?>
+use yii\helpers\Html;
 
+CalendarAsset::register($this);
+
+$currentUser   = Yii::$app->user->isGuest ? '' : Html::encode(Yii::$app->user->identity->username);
+$currentUserId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
+
+if (Yii::$app->user->isGuest) {
+    echo '<div class="alert alert-warning" role="alert">Bitte melden Sie sich an, um eine Buchung zu tätigen.</div>';
+}
+?>
 
 <!-- Kalender -->
 <div id="calendar" class="mb-4"></div>
-
 
 <!-- Popup komplett mit Bootstrap-Klassen -->
 <div id="booking-popup" class="d-none position-fixed top-50 start-50 translate-middle bg-white rounded shadow p-4" style="z-index:9999;">
@@ -23,7 +30,7 @@ CalendarAsset::register($this);
     <!-- Name -->
     <div class="mb-3">
         <label for="input-name" class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
-        <input id="input-name" type="text" class="form-control" placeholder="Ihr Name" />
+        <input id="input-name" type="text" class="form-control bg-light" placeholder="Ihr Name" readonly />
     </div>
 
     <!-- Anmerkung -->
@@ -67,7 +74,9 @@ CalendarAsset::register($this);
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        const API_URL = 'http://localhost:8081/bookings';
+        const API_URL      = 'http://localhost:8081/bookings';
+        const currentUser   = '<?= $currentUser ?>';
+        const currentUserId = <?= $currentUserId ?? 'null' ?>; // ← eingeloggter User
 
         // Grenzen als Konstanten
         const MIN_DURATION_MIN = 60;   // 1 Stunde
@@ -159,7 +168,7 @@ CalendarAsset::register($this);
         // bootstrap d-none statt style.display
         function showPopup(dateStr, startTime, endTime) {
             document.getElementById('input-date').value       = dateStr;
-            document.getElementById('input-name').value       = '';
+            document.getElementById('input-name').value       = currentUser;
             document.getElementById('input-annotation').value = '';
             errBox.classList.add('d-none');
             errBox.textContent = '';
@@ -197,7 +206,7 @@ CalendarAsset::register($this);
             slotMaxTime: '21:00:00',
             allDaySlot: false,
             locale: 'de',
-            selectable: true,
+            selectable: <?= Yii::$app->user->isGuest ? 'false' : 'true' ?>,
             selectMirror: true,
 
             // Kalender auf heute bis heute+7 Tage begrenzen
@@ -236,15 +245,22 @@ CalendarAsset::register($this);
                 fetch(API_URL)
                     .then(r => r.json())
                     .then(data => {
-                        const events = data.map(ev => ({
-                            ...ev,
-                            classNames: ['booked-slot'],
-                            editable: false,
-                            extendedProps: {
-                                bookedBy:   ev.title || ev.name || 'Belegt',
-                                annotation: ev.annotation || ''
-                            }
-                        }));
+                        const events = data.map(ev => {
+                            // Eigene Buchung erkennen
+                            const isOwn = currentUserId !== null && ev.user_id === currentUserId;
+
+                            return {
+                                ...ev,
+                                // Eigene Buchungen: grün, fremde: rot
+                                classNames: [isOwn ? 'own-slot' : 'booked-slot'],
+                                editable: false,
+                                extendedProps: {
+                                    isOwn,
+                                    bookedBy:   isOwn ? ev.title : 'Belegt',
+                                    annotation: isOwn ? (ev.annotation || '') : ''
+                                }
+                            };
+                        });
                         successCallback(events);
                     })
                     .catch(failureCallback);
@@ -252,21 +268,27 @@ CalendarAsset::register($this);
 
             // Tooltip mit Name und Anmerkung beim Hover
             eventDidMount: function(info) {
-                const bookedBy   = info.event.extendedProps.bookedBy;
-                const annotation = info.event.extendedProps.annotation;
-                info.el.title    = annotation
-                    ? `Gebucht von: ${bookedBy}\nAnmerkung: ${annotation}`
-                    : `Gebucht von: ${bookedBy}`;
+                const { isOwn, bookedBy, annotation } = info.event.extendedProps;
+                if (isOwn) {
+                    info.el.title = annotation
+                        ? `Meine Buchung\nAnmerkung: ${annotation}`
+                        : 'Meine Buchung';
+                } else {
+                    info.el.title = 'Belegt';
+                }
             },
 
             // Klick auf belegtes Event
             eventClick: function(info) {
-                const bookedBy   = info.event.extendedProps.bookedBy;
-                const annotation = info.event.extendedProps.annotation;
-                const msg        = annotation
-                    ? `Gebucht von: ${bookedBy}\nAnmerkung: ${annotation}`
-                    : `Gebucht von: ${bookedBy}`;
-                alert(msg);
+                const { isOwn, bookedBy, annotation } = info.event.extendedProps;
+                if (isOwn) {
+                    const msg = annotation
+                        ? `Ihre Buchung\nAnmerkung: ${annotation}`
+                        : 'Ihre Buchung';
+                    alert(msg);
+                } else {
+                    alert('Dieser Zeitraum ist bereits gebucht.');
+                }
             },
         });
         calendar.render();
