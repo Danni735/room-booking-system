@@ -1,0 +1,40 @@
+/* ========
+   Booking Calendar – Custom Styles
+   Einbinden via CalendarAsset::$css[]
+========== */
+
+/* --------- Gebuchte Slots als belegt kennzeichnen ---------- */
+.fc-event.booked-slot {
+    background-color: var(--bs-danger) !important;
+    border-color: var(--bs-danger-border-subtle) !important;
+    cursor: not-allowed !important;
+    opacity: 0.85;
+}
+
+.fc-event.booked-slot .fc-event-title::before {
+    content: '🔒 ';
+}
+
+/* Diagonale Streifen als "belegt"-Muster */
+.fc-event.booked-slot .fc-event-main {
+    background-image: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 4px,
+            rgba(255, 255, 255, 0.15) 4px,
+            rgba(255, 255, 255, 0.15) 8px
+    );
+}
+
+/* Selektions-Highlight nutzt Bootstrap Primary */
+.fc-highlight {
+    background: rgba(var(--bs-primary-rgb), 0.15) !important;
+}
+
+/* ---------------Buchungs-Popup--------------- */
+#booking-popup {
+    min-width: 340px;
+    z-index: 9999;
+    /* Stärkerer Schatten da kein Overlay mehr – Popup hebt sich trotzdem klar ab */
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35) !important;
+}
