@@ -23,199 +23,54 @@ Barrierefreiheit nach **WCAG 2.1 Stufe AA** wurde konsequent berücksichtigt, un
 
 ## Installation
 
-### **Linux – Projekt ausführen** 
-### Schritt 1 – Voraussetzungen installieren
-
-bash
-
-```bash
-sudo apt update
-sudo apt install php php-cli php-sqlite3 php-mbstring php-xml php-curl php-zip unzip git -y
+### Voraussetzungen
+- PHP ≥ 8.4 mit den Extensions: `pdo_sqlite`, `sqlite3`, `mbstring`, `curl`, `zip`
+	- für Windows: in der php.ini die o.g. extensions aktivieren
+	- unter Linux:
+	``` sudo apt install php-sqlite3 php-mbstring php-curl php-zip ```
+	
+- Composer
+	- für Windows Composer downloaden
+	- unter Linux:
+```
+curl -sS https://getcomposer.org/installer | php sudo mv composer.phar /usr/local/bin/composer
 ```
 
-Prüfen:
-```bash
-php -v
+- Git
+	- für Windows Git downloaden
+	- unter Linux:
 ```
----
-### Schritt 2 – Projekt von GitHub clonen
+sudo apt install git -y
+```
 
-```bash
+### Schritte
+
+**1. Repository klonen**
+
+```
 git clone https://github.com/Danni735/room-booking-system.git
-cd DEIN-REPO
-```
----
-### Schritt 3 – Abhängigkeiten installieren
-
-```bash
-composer install --no-dev
-```
----
-### Schritt 4 – Projekt initialisieren
-
-```bash
-php init
+cd room-booking-system 
 ```
 
-→ `0` für **Development** wählen, mit `yes` bestätigen
-
-### Schritt 5 – Datenbankmigration
-
-```bash
-php yii migrate
+**2. Abhängigkeiten installieren**
+```
+composer install
 ```
 
----
-### Schritt 6 – Server starten
+**Server starten**
 
-**Terminal 1 – Frontend:**
-
-```bash
-php yii serve --docroot=frontend/web --port=8080
+Terminal 1 – Frontend
+```
+php yii serve --docroot=frontend/web --port=8080 
 ```
 
-**Terminal 2 – Backend:**
-
-```bash
+Terminal 2 – Backend
+```
 php yii serve --docroot=backend/web --port=8081
 ```
 
----
-
-### Schritt 7 – Im Browser öffnen
-
-- **Frontend:** [http://localhost:8080](http://localhost:8080)
-- **Backend:** [http://localhost:8081](http://localhost:8081)
-
-
-### **Windows 11 – Projekt ausführen**
-
-### Schritt 1 – PHP installieren
-
-1. Gehe auf [https://windows.php.net/download](https://windows.php.net/download)
-2. **PHP 8.4 "Non-Thread Safe (NTS) - x64" ** ZIP herunterladen
-3. Entpacken nach `C:\php`
-4. PHP zur PATH-Variable hinzufügen:
-    - Startmenü → **"Umgebungsvariablen"** suchen
-    - **"Systemumgebungsvariablen bearbeiten"**
-    - **"Path"** → **"Bearbeiten"** → **"Neu"** → `C:\php`
-    - Mit OK bestätigen
-
-Prüfen (neues Terminal):
-```cmd
-php -v
-```
-
----
-### Schritt 2 – PHP Extensions aktivieren
-
-In `C:\php\php.ini` (falls nicht vorhanden: `php.ini-development` kopieren und umbenennen) diese Zeilen suchen und `;` entfernen:
-
-ini
-
-```ini
-extension=pdo_sqlite
-extension=sqlite3
-extension=mbstring
-extension=openssl
-extension=curl
-extension=zip
-```
-
----
-
-### Schritt 3 – Composer installieren
-
-1. [https://getcomposer.org/Composer-Setup.exe](https://getcomposer.org/Composer-Setup.exe) herunterladen
-2. Installer ausführen, PHP-Pfad auf `C:\php\php.exe` zeigen lassen
-
-Prüfen:
-
-cmd
-
-```cmd
-composer -v
-```
-
----
-
-### Schritt 4 – Git installieren
-
-1. [https://git-scm.com/download/win](https://git-scm.com/download/win) herunterladen
-2. Installer ausführen (Standardeinstellungen sind OK)
-
-Prüfen:
-
-cmd
-
-```cmd
-git --version
-```
-
----
-
-### Schritt 5 – Projekt von GitHub clonen
-
-cmd
-
-```cmd
-git clone https://github.com/Danni735/room-booking-system.git
-cd DEIN-REPO
-```
-
----
-
-### Schritt 6 – Abhängigkeiten installieren
-
-cmd
-
-```cmd
-composer install --no-dev
-```
-
----
-
-### Schritt 7 – Projekt initialisieren
-
-cmd
-
-```cmd
-php init
-```
-
-→ `0` für **Development** wählen, mit `yes` bestätigen
-
----
-### Schritt 8 – Datenbankmigration
-
-```bash
-php yii migrate
-```
-
-### Schritt 9 – Server starten
-
-**Fenster 1 – Frontend:**
-
-cmd
-
-```cmd
-php yii serve --docroot=frontend/web --port=8080
-```
-
-**Fenster 2 – Backend:**
-
-cmd
-
-```cmd
-php yii serve --docroot=backend/web --port=8081
-```
-
----
-
-### Schritt 10 – Im Browser öffnen
-
-- **Frontend:** [http://localhost:8080](http://localhost:8080)
-- **Backend:** [http://localhost:8081](http://localhost:8081)
+**Frontend:** http://localhost:8080  
+**Backend:** http://localhost:8081
 
 ## Hinweis zur Nutzung
 
@@ -327,7 +182,7 @@ Die Spalte "user_id" in der "booking" wird noch nicht mit der Immatrikulationsnu
 
 Eine Universität ist international, da es allerdings keine Vorgaben zur Internationalisierung gegeben hat, sind die Kommentare und die Benutzeroberfläche aufgrund der Einfachheit hauptsächlich in Deutsch gehalten.
 
-## Dokumentation des REST Endpoint
+## Dokumentation der REST Endpoint
 
 Die REST-API des Raumbuchungssystems umfasst drei Endpunkte unter der Basis-URL 
 http://localhost:8081. Über "GET /bookings" werden alle vorhandenen Buchungen als JSON-Array abgerufen, das direkt von FullCalendar als Kalender-Events verarbeitet wird.
