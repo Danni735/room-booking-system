@@ -327,7 +327,7 @@ Die Spalte "user_id" in der "booking" wird noch nicht mit der Immatrikulationsnu
 
 Eine Universität ist international, da es allerdings keine Vorgaben zur Internationalisierung gegeben hat, sind die Kommentare und die Benutzeroberfläche aufgrund der Einfachheit hauptsächlich in Deutsch gehalten.
 
-## Dokumentation der REST Endpoint
+## Dokumentation des REST Endpoint
 
 Die REST-API des Raumbuchungssystems umfasst drei Endpunkte unter der Basis-URL 
 http://localhost:8081. Über "GET /bookings" werden alle vorhandenen Buchungen als JSON-Array abgerufen, das direkt von FullCalendar als Kalender-Events verarbeitet wird.
