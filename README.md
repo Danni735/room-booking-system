@@ -78,7 +78,7 @@ php yii serve --docroot=backend/web --port=8081
 Benutzer: admin
 Passwort: admin123
 *//*
-Benutzer: DPorrello
+Benutzer: Daniela
 Passwort: dap12345
 
 Der Nutzer kann per Drag&Drop mit der Maus, seinen Zeitslot markieren und auswählen.
