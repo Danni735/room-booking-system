@@ -4,6 +4,7 @@
      Primär   (Pantone 281): #00205B  – Logo, Schrift, Buttons
      Akzent   (Pantone 299): #00A3E0  – Events, Fokus, Links
    Bootstrap 5 wird vorausgesetzt.
+   Barrierefreiheit: WCAG 2.1 Stufe AA
    ============================================================ */
 
 /* ── Google Font ────────────────────────────────────────────── */
@@ -34,6 +35,9 @@
     --shadow-popup:      0 20px 60px rgba(0, 32, 91, 0.18);
     --shadow-btn:        0 2px 8px rgba(0, 32, 91, 0.25);
     --transition:        0.18s ease;
+
+    /* WCAG 2.1 – Fokuslinie: sichtbarer 3px-Kontrast-Ring */
+    --focus-ring: 0 0 0 3px var(--upb-white), 0 0 0 5px var(--upb-accent);
 }
 
 /* ── Basis ──────────────────────────────────────────────────── */
@@ -43,6 +47,47 @@ body {
     color: var(--upb-gray-800);
     font-size: 15px;
     line-height: 1.6;
+}
+
+/* ── Skip-Link (WCAG 2.4.1) ─────────────────────────────────── */
+/*
+   Normalerweise unsichtbar, erscheint bei Tab-Fokus sichtbar.
+   Bootstrap stellt .visually-hidden-focusable bereit –
+   diese Regel verfeinert das Design.
+*/
+.visually-hidden-focusable:focus {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 99999;
+    padding: 10px 20px;
+    background: var(--upb-primary);
+    color: var(--upb-white);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-popup);
+    outline: 3px solid var(--upb-accent);
+    outline-offset: 2px;
+    text-decoration: none;
+}
+
+/* ── Globale Fokus-Stile (WCAG 2.4.7 / 2.4.11) ─────────────── */
+/*
+   Jedes interaktive Element muss einen sichtbaren Fokusindikator haben.
+   Der Kontrast-Ring ist mit UPB-Farben deutlich sichtbar.
+*/
+:focus-visible {
+    outline: 3px solid var(--upb-accent) !important;
+    outline-offset: 2px !important;
+    box-shadow: var(--focus-ring) !important;
+    border-radius: var(--radius-sm);
+}
+
+/* Kein Outline bei Mausklick (nur bei Tastatur) */
+:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
 }
 
 /* ── Kalender-Wrapper ───────────────────────────────────────── */
@@ -84,6 +129,12 @@ body {
     background: var(--upb-primary-light) !important;
     border-color: var(--upb-primary) !important;
     color: var(--upb-primary) !important;
+}
+
+/* Fokus auf Kalender-Buttons (WCAG 2.4.7) */
+.fc .fc-button:focus-visible {
+    outline: 3px solid var(--upb-accent) !important;
+    outline-offset: 2px !important;
 }
 
 .fc .fc-button-active,
@@ -140,6 +191,7 @@ body {
     padding-right: 10px !important;
 }
 
+/* Event-Blöcke im Kalender */
 .fc-event {
     border: none !important;
     border-left: 3px solid var(--upb-primary) !important;
@@ -151,13 +203,13 @@ body {
     cursor: pointer;
 }
 
-/* Eigene Buchungen (own-slot) → Akzentblau */
+/* Eigene Buchungen – Akzentblau */
 .fc-event.own-slot {
     background: var(--upb-accent) !important;
     box-shadow: 0 2px 8px rgba(0, 163, 224, 0.3) !important;
 }
 
-/* Fremde Buchungen (booked-slot) → Dunkelblau */
+/* Fremde Buchungen – Dunkelblau */
 .fc-event.booked-slot {
     background: var(--upb-primary) !important;
     box-shadow: 0 2px 8px rgba(0, 32, 91, 0.25) !important;
@@ -167,13 +219,19 @@ body {
     filter: brightness(0.93) !important;
 }
 
+/* Fokus auf Event-Blöcken (WCAG 2.4.7) */
+.fc-event:focus {
+    outline: 3px solid var(--upb-accent) !important;
+    outline-offset: 2px !important;
+}
+
 .fc-event-title {
     color: var(--upb-white) !important;
     font-weight: 600 !important;
 }
 
 .fc-event-time {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
     font-size: 0.72rem !important;
 }
 
@@ -193,12 +251,11 @@ body {
     border-bottom-color: var(--upb-accent) !important;
 }
 
-/* ── Popup ──────────────────────────────────────────────────── */
+/* ── Popup / Modal ──────────────────────────────────────────── */
 /*
    Sichtbarkeit wird ausschließlich über Bootstraps d-none gesteuert.
-   Wenn d-none entfernt wird, ist das Popup sofort sichtbar.
    position-fixed / top-50 / start-50 / translate-middle kommen
-   aus den Bootstrap-Utility-Klassen im HTML.
+   aus Bootstrap-Utility-Klassen im HTML.
 */
 #booking-popup {
     width: 420px;
@@ -209,8 +266,6 @@ body {
     box-shadow: var(--shadow-popup) !important;
     animation: upb-popup-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-/* Bootstrap's .rounded und .shadow werden durch !important oben überschrieben */
 
 @keyframes upb-popup-in {
     from {
@@ -248,7 +303,7 @@ body {
     to   { opacity: 1; }
 }
 
-/* ── Formular-Overrides ─────────────────────────────────────── */
+/* ── Formular-Elemente ──────────────────────────────────────── */
 .form-label {
     font-size: 0.78rem;
     font-weight: 700;
@@ -266,14 +321,22 @@ body {
     border-radius: var(--radius-md) !important;
     background-color: var(--upb-gray-50) !important;
     color: var(--upb-gray-800);
-    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    transition: border-color var(--transition), box-shadow var(--transition);
+    min-height: 44px; /* WCAG 2.5.5 – Mindest-Klickfläche 44×44px */
 }
 
 .form-control:focus,
 .form-select:focus {
     border-color: var(--upb-accent) !important;
-    box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.2) !important;
     background-color: var(--upb-white) !important;
+    outline: none !important;
+}
+
+/* Ungültiges Feld visuell markieren (WCAG 3.3.1) */
+.form-control[aria-invalid="true"] {
+    border-color: var(--upb-danger) !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
 }
 
 .form-control[readonly] {
@@ -282,26 +345,34 @@ body {
     cursor: default;
 }
 
-/* ── Bootstrap-Button-Overrides ─────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────────────── */
 .btn {
     font-family: 'Source Sans 3', sans-serif;
     font-weight: 600;
     border-radius: var(--radius-md) !important;
     padding: 10px 20px;
+    min-height: 44px; /* WCAG 2.5.5 – Mindest-Klickfläche */
     transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
 }
 
 .btn-primary {
     background-color: var(--upb-primary) !important;
     border-color: var(--upb-primary) !important;
+    color: var(--upb-white) !important;
 }
 
-.btn-primary:hover,
-.btn-primary:focus {
+.btn-primary:hover {
     background-color: var(--upb-primary-dark) !important;
     border-color: var(--upb-primary-dark) !important;
-    box-shadow: 0 0 0 0.25rem rgba(0, 32, 91, 0.25) !important;
     transform: translateY(-1px);
+}
+
+/* Deaktivierter Button – visuell eindeutig (WCAG 1.4.3) */
+.btn-primary:disabled {
+    background-color: var(--upb-gray-400) !important;
+    border-color: var(--upb-gray-400) !important;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .btn-secondary {
@@ -325,36 +396,37 @@ body {
     color: var(--upb-white) !important;
 }
 
-.btn-danger {
-    transition: filter var(--transition), transform var(--transition);
-}
-
-.btn-danger:hover {
-    filter: brightness(0.9);
-    transform: translateY(-1px);
-}
-
-/* ── Fehlermeldung ──────────────────────────────────────────── */
+/* ── Fehlermeldung (WCAG 3.3.1) ─────────────────────────────── */
 #popup-error {
     border-left: 3px solid var(--upb-danger) !important;
     border-radius: var(--radius-md) !important;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     font-weight: 500;
 }
 
 /* ── Links ──────────────────────────────────────────────────── */
 a {
     color: var(--upb-accent);
-    text-decoration: none;
+    text-decoration: underline; /* WCAG 1.4.1 – nicht nur Farbe als Unterscheidung */
     transition: color var(--transition);
 }
 
 a:hover {
     color: var(--upb-accent-dark);
-    text-decoration: underline;
 }
 
-/* ── Card-Overrides ─────────────────────────────────────────── */
+/* ── Bootstrap-Overrides ────────────────────────────────────── */
+.btn-primary:focus,
+.btn-primary:focus-visible {
+    box-shadow: 0 0 0 3px var(--upb-white), 0 0 0 5px var(--upb-accent) !important;
+}
+
+.btn-secondary:focus,
+.btn-secondary:focus-visible {
+    box-shadow: 0 0 0 3px var(--upb-white), 0 0 0 5px var(--upb-gray-600) !important;
+}
+
+/* Card-Overrides */
 .card {
     border-radius: var(--radius-lg) !important;
     box-shadow: var(--shadow-card) !important;
@@ -368,19 +440,8 @@ a:hover {
     border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
 }
 
-/* ── Badge ──────────────────────────────────────────────────── */
 .badge.bg-primary { background-color: var(--upb-primary) !important; }
 .badge.bg-info    { background-color: var(--upb-accent)  !important; }
-
-/* ── Alert ──────────────────────────────────────────────────── */
-.alert-upb {
-    background: var(--upb-primary-light);
-    border-left: 4px solid var(--upb-primary);
-    border-radius: var(--radius-md);
-    color: var(--upb-primary);
-    font-weight: 500;
-    padding: 12px 16px;
-}
 
 /* ── Bestätigungsseite ──────────────────────────────────────── */
 .upb-confirm-card {
@@ -431,6 +492,22 @@ a:hover {
 }
 .upb-detail-table tr:not(:last-child) td {
     border-bottom: 1px solid var(--upb-gray-100);
+}
+
+/* ── Reduced Motion (WCAG 2.3.3) ───────────────────────────── */
+/*
+   Nutzer mit Gleichgewichtsstörungen oder vestibulärer Schwäche
+   können Bewegungseffekte im Betriebssystem deaktivieren.
+   Diese Regel respektiert diese Einstellung.
+*/
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
