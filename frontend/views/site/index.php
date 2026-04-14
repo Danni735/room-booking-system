@@ -15,13 +15,20 @@ $currentUserId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
 if (Yii::$app->user->isGuest) {
     echo '<div class="alert alert-warning" role="alert">Bitte melden Sie sich an, um eine Buchung zu tätigen.</div>';
 }
+
+// Bootstrap zuerst, danach booking.css (damit Overrides greifen)
+$this->registerCssFile('https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css');
+$this->registerCssFile('@web/css/booking.css');
 ?>
+
+<!-- Overlay (hinter Popup, vor Kalender) -->
+<div id="popup-overlay" class="d-none"></div>
 
 <!-- Kalender -->
 <div id="calendar" class="mb-4"></div>
 
-<!-- Popup komplett mit Bootstrap-Klassen -->
-<div id="booking-popup" class="d-none position-fixed top-50 start-50 translate-middle bg-white rounded shadow p-4" style="z-index:9999;">
+<!-- Popup: Sichtbarkeit nur über d-none gesteuert -->
+<div id="booking-popup" class="d-none position-fixed top-50 start-50 translate-middle bg-white p-4">
 
     <h5 class="mb-3">Raum buchen</h5>
 
@@ -29,13 +36,13 @@ if (Yii::$app->user->isGuest) {
 
     <!-- Name -->
     <div class="mb-3">
-        <label for="input-name" class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
-        <input id="input-name" type="text" class="form-control bg-light" placeholder="Ihr Name" readonly />
+        <label for="input-name" class="form-label">Name <span class="text-danger">*</span></label>
+        <input id="input-name" type="text" class="form-control" placeholder="Ihr Name" readonly />
     </div>
 
     <!-- Anmerkung -->
     <div class="mb-3">
-        <label for="input-annotation" class="form-label fw-semibold">
+        <label for="input-annotation" class="form-label">
             Anmerkung <small class="text-muted fw-normal">(optional)</small>
         </label>
         <input id="input-annotation" type="text" class="form-control"
@@ -44,19 +51,18 @@ if (Yii::$app->user->isGuest) {
 
     <!-- Datum -->
     <div class="mb-3">
-        <label for="input-date" class="form-label fw-semibold">Datum</label>
-        <input id="input-date" type="text" class="form-control bg-light" readonly />
+        <label for="input-date" class="form-label">Datum</label>
+        <input id="input-date" type="text" class="form-control" readonly />
     </div>
 
     <!-- Start- und Endzeit -->
     <div class="row g-3 mb-3">
         <div class="col">
-            <label for="input-start" class="form-label fw-semibold">Startzeit</label>
+            <label for="input-start" class="form-label">Startzeit</label>
             <select id="input-start" class="form-select"></select>
         </div>
         <div class="col">
-            <!-- Hinweis auf min/max Dauer -->
-            <label for="input-end" class="form-label fw-semibold">
+            <label for="input-end" class="form-label">
                 Endzeit <small class="text-muted fw-normal">(1–6 Std.)</small>
             </label>
             <select id="input-end" class="form-select"></select>
@@ -74,57 +80,76 @@ if (Yii::$app->user->isGuest) {
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        const API_URL      = 'http://localhost:8081/bookings';
+        const API_URL       = 'http://localhost:8081/bookings';
         const currentUser   = '<?= $currentUser ?>';
-        const currentUserId = <?= $currentUserId ?? 'null' ?>; // ← eingeloggter User
+        const currentUserId = <?= $currentUserId ?? 'null' ?>;
 
-        // Grenzen als Konstanten
-        const MIN_DURATION_MIN = 60;   // 1 Stunde
-        const MAX_DURATION_MIN = 360;  // 6 Stunden
+        const MIN_DURATION_MIN = 60;
+        const MAX_DURATION_MIN = 360;
         const SLOT_MAX_MIN     = 21 * 60;
 
-        // Maximales Buchungsdatum (heute + 7 Tage)
         const today   = new Date();
         today.setHours(0, 0, 0, 0);
-        // +8 weil validRange.end exklusiv ist → Tag 7 (z.B. 19.04) bleibt wählbar
         const maxDate = new Date(today);
         maxDate.setDate(today.getDate() + 8);
 
-        // Zeitslots 07:00 - 21:00 in 60-Minuten-Schritten
         const timeSlots = <?= json_encode(array_map(function($m) {
             return sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
         }, range(7 * 60, 21 * 60, 60))) ?>;
 
         const startSelect = document.getElementById('input-start');
         const endSelect   = document.getElementById('input-end');
+        const popup       = document.getElementById('booking-popup');
+        const overlay     = document.getElementById('popup-overlay');
+        const errBox      = document.getElementById('popup-error');
 
-        // Startzeit-Select befüllen – abhängig vom gewählten Datum
-        // Wenn heute: vergangene Slots ausblenden; sonst alle erlaubten Slots
+        // ── Hilfsfunktionen ──────────────────────────────────
+
+        function toTimeStr(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+        }
+
+        /*function sprintf(fmt, ...args) {
+            return fmt.replace(/%02d/g, () => String(args.shift()).padStart(2, '0'));
+        }*/
+
+        function roundToSlot(time) {
+            const [h, m] = time.split(':').map(Number);
+            const rounded = Math.round((h * 60 + m) / 60) * 60;
+            const clamped = Math.min(Math.max(rounded, 7 * 60), 21 * 60);
+            return toTimeStr(clamped);
+        }
+
+        function showError(msg) {
+            errBox.textContent = msg;
+            errBox.classList.remove('d-none');
+        }
+
+        // ── Selects befüllen ─────────────────────────────────
+
         function updateStartOptions(dateStr, preferredStart) {
-            const now        = new Date();
-            const isToday    = dateStr === now.toISOString().substring(0, 10);
-            const nowMin     = now.getHours() * 60 + now.getMinutes();
+            const now     = new Date();
+            const isToday = dateStr === now.toISOString().substring(0, 10);
+            const nowMin  = now.getHours() * 60 + now.getMinutes();
 
             startSelect.innerHTML = '';
             timeSlots.forEach(t => {
                 const [h, m] = t.split(':').map(Number);
                 const tMin   = h * 60 + m;
-                // Slot muss mind. 1h Restzeit bis 21:00 lassen
                 if (tMin + MIN_DURATION_MIN > SLOT_MAX_MIN) return;
-                // Bei heutigem Datum: vergangene/aktuelle Slots ausblenden
                 if (isToday && tMin <= nowMin) return;
                 startSelect.innerHTML += `<option value="${t}">${t}</option>`;
             });
 
-            // Bevorzugte Startzeit setzen, falls noch verfügbar
-            if (preferredStart && [...startSelect.options].some(o => o.value === preferredStart)) {
+            if (preferredStart && [...startSelect].some(o => o.value === preferredStart)) {
                 startSelect.value = preferredStart;
             } else {
                 startSelect.selectedIndex = 0;
             }
         }
 
-        // Endzeit-Select dynamisch befüllen
         function updateEndOptions(startTime, preferredEnd) {
             const [sh, sm] = startTime.split(':').map(Number);
             const startMin = sh * 60 + sm;
@@ -151,21 +176,12 @@ if (Yii::$app->user->isGuest) {
             endSelect.value = toTimeStr(minEnd);
         }
 
-        function toTimeStr(minutes) {
-            const h = Math.floor(minutes / 60);
-            const m = minutes % 60;
-            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-        }
-
         startSelect.addEventListener('change', function () {
             updateEndOptions(this.value);
         });
 
-        // Popup Elemente
-        const popup  = document.getElementById('booking-popup');
-        const errBox = document.getElementById('popup-error');
+        // ── Popup öffnen / schließen ─────────────────────────
 
-        // bootstrap d-none statt style.display
         function showPopup(dateStr, startTime, endTime) {
             document.getElementById('input-date').value       = dateStr;
             document.getElementById('input-name').value       = currentUser;
@@ -173,31 +189,28 @@ if (Yii::$app->user->isGuest) {
             errBox.classList.add('d-none');
             errBox.textContent = '';
 
-            // Startzeit-Optionen abhängig vom Datum befüllen (heute → keine Vergangenheit)
             updateStartOptions(dateStr, startTime);
             updateEndOptions(startSelect.value, endTime);
 
+            // Overlay einblenden
+            overlay.classList.remove('d-none');
+            // Popup einblenden
             popup.classList.remove('d-none');
-            document.getElementById('input-name').focus();
+
+            document.getElementById('input-annotation').focus();
         }
 
         function hidePopup() {
             popup.classList.add('d-none');
-            calendar.unselect(); // Selektion erst beim Schließen aufheben
-        }
-
-        function showError(msg) {
-            errBox.textContent = msg;
-            errBox.classList.remove('d-none');
-        }
-
-        function sprintf(fmt, ...args) {
-            return fmt.replace(/%02d/g, () => String(args.shift()).padStart(2, '0'));
+            overlay.classList.add('d-none');
+            calendar.unselect();
         }
 
         document.getElementById('btn-cancel').addEventListener('click', hidePopup);
+        overlay.addEventListener('click', hidePopup);
 
-        // FullCalendar
+        // ── FullCalendar ─────────────────────────────────────
+
         const calendarEl = document.getElementById('calendar');
         const calendar = new FullCalendar.Calendar(calendarEl, {
             schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
@@ -209,23 +222,19 @@ if (Yii::$app->user->isGuest) {
             locale: 'de',
             selectable: <?= Yii::$app->user->isGuest ? 'false' : 'true' ?>,
             selectMirror: true,
-
-            // Kalender auf heute bis heute+7 Tage begrenzen
-            validRange: {
-                start: today,
-                end:   maxDate,
-            },
-
-            // Keine Selektion über bestehende Buchungen möglich
             selectOverlap: false,
 
+            /*validRange: {
+                start: today,
+                end:   maxDate,
+            },*/
+
             headerToolbar: {
-                left: 'prev,next today',
+                left:   'prev,next today',
                 center: 'title',
-                right: 'timeGridWeek,timeGridDay'
+                right:  'timeGridWeek,timeGridDay'
             },
 
-            // Vergangene Zeiten und Daten > 7 Tage nicht auswählbar
             selectAllow: function(selectInfo) {
                 return selectInfo.start >= new Date() && selectInfo.start < maxDate;
             },
@@ -235,29 +244,21 @@ if (Yii::$app->user->isGuest) {
                 const startStr = info.startStr.substring(11, 16);
                 const endStr   = info.endStr.substring(11, 16);
 
-                const start = roundToSlot(startStr);
-                const end   = roundToSlot(endStr);
-
-                showPopup(dateStr, start, end);
+                showPopup(dateStr, roundToSlot(startStr), roundToSlot(endStr));
             },
 
-            // Events aus API laden + CSS-Klasse "booked-slot" setzen
             events: function(fetchInfo, successCallback, failureCallback) {
                 fetch(API_URL)
                     .then(r => r.json())
                     .then(data => {
                         const events = data.map(ev => {
-                            // Eigene Buchung erkennen
                             const isOwn = currentUserId !== null && ev.user_id === currentUserId;
-
                             return {
                                 ...ev,
-                                // Eigene Buchungen: grün, fremde: rot
                                 classNames: [isOwn ? 'own-slot' : 'booked-slot'],
                                 editable: false,
                                 extendedProps: {
                                     isOwn,
-                                    bookedBy:   isOwn ? ev.title : 'Belegt',
                                     annotation: isOwn ? (ev.annotation || '') : ''
                                 }
                             };
@@ -267,9 +268,8 @@ if (Yii::$app->user->isGuest) {
                     .catch(failureCallback);
             },
 
-            // Tooltip mit Name und Anmerkung beim Hover
             eventDidMount: function(info) {
-                const { isOwn, bookedBy, annotation } = info.event.extendedProps;
+                const { isOwn, annotation } = info.event.extendedProps;
                 if (isOwn) {
                     info.el.title = annotation
                         ? `Meine Buchung\nAnmerkung: ${annotation}`
@@ -279,31 +279,20 @@ if (Yii::$app->user->isGuest) {
                 }
             },
 
-            // Klick auf belegtes Event
             eventClick: function(info) {
-                const { isOwn, bookedBy, annotation } = info.event.extendedProps;
+                const { isOwn, annotation } = info.event.extendedProps;
                 if (isOwn) {
-                    const msg = annotation
-                        ? `Ihre Buchung\nAnmerkung: ${annotation}`
-                        : 'Ihre Buchung';
-                    alert(msg);
+                    alert(annotation ? `Ihre Buchung\nAnmerkung: ${annotation}` : 'Ihre Buchung');
                 } else {
                     alert('Dieser Zeitraum ist bereits gebucht.');
                 }
             },
         });
+
         calendar.render();
 
-        function roundToSlot(time) {
-            const [h, m] = time.split(':').map(Number);
-            const rounded = Math.round((h * 60 + m) / 60) * 60;
-            const rh = Math.floor(rounded / 60);
-            const rm = rounded % 60;
-            const clamped = Math.min(Math.max(rh * 60 + rm, 7 * 60), 21 * 60);
-            return sprintf('%02d:%02d', Math.floor(clamped / 60), clamped % 60);
-        }
+        // ── Buchen ───────────────────────────────────────────
 
-        // Buchen
         document.getElementById('btn-submit').addEventListener('click', function () {
             const name       = document.getElementById('input-name').value.trim();
             const annotation = document.getElementById('input-annotation').value.trim();
@@ -313,7 +302,6 @@ if (Yii::$app->user->isGuest) {
 
             errBox.classList.add('d-none');
 
-            // Datum darf max. 7 Tage in der Zukunft liegen
             const bookingDate = new Date(date);
             bookingDate.setHours(0, 0, 0, 0);
             if (bookingDate >= maxDate) {
@@ -326,7 +314,6 @@ if (Yii::$app->user->isGuest) {
                 return;
             }
 
-            // Dauer prüfen (min 1h, max 6h)
             const [sh, sm] = start.split(':').map(Number);
             const [eh, em] = end.split(':').map(Number);
             const durationMin = (eh * 60 + em) - (sh * 60 + sm);
@@ -340,24 +327,20 @@ if (Yii::$app->user->isGuest) {
                 return;
             }
 
-            const startDateTime = date + ' ' + start + ':00';
-            const endDateTime   = date + ' ' + end   + ':00';
-
             fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name:       name,
                     annotation: annotation,
-                    start_time: startDateTime,
-                    end_time:   endDateTime,
+                    start_time: date + ' ' + start + ':00',
+                    end_time:   date + ' ' + end   + ':00',
                 }),
             })
                 .then(r => r.json())
                 .then(data => {
                     if (data.errors) {
-                        const msgs = Object.values(data.errors).flat();
-                        showError(msgs.join(' '));
+                        showError(Object.values(data.errors).flat().join(' '));
                     } else {
                         window.location.href = '/site/confirm'
                             + '?name='       + encodeURIComponent(data.name)
@@ -367,9 +350,7 @@ if (Yii::$app->user->isGuest) {
                             + '&annotation=' + encodeURIComponent(data.annotation || '');
                     }
                 })
-                .catch(() => {
-                    showError('Verbindungsfehler zum Server.');
-                });
+                .catch(() => showError('Verbindungsfehler zum Server.'));
         });
 
     });

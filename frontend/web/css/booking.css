@@ -1,54 +1,453 @@
-/* ========
-   Booking Calendar – Custom Styles
-   Einbinden via CalendarAsset::$css[]
-========== */
+/* ============================================================
+   booking.css – Raumbuchungssystem Universität Paderborn
+   Farben gemäß offiziellem Corporate Design:
+     Primär   (Pantone 281): #00205B  – Logo, Schrift, Buttons
+     Akzent   (Pantone 299): #00A3E0  – Events, Fokus, Links
+   Bootstrap 5 wird vorausgesetzt.
+   ============================================================ */
 
-/* --------- Gebuchte Slots als belegt kennzeichnen ---------- */
-.fc-event.booked-slot {
-    background-color: var(--bs-danger) !important;
-    border-color: var(--bs-danger-border-subtle) !important;
-    cursor: not-allowed !important;
-    opacity: 0.85;
+/* ── Google Font ────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+/* ── CSS-Variablen (UPB Corporate Design) ───────────────────── */
+:root {
+    --upb-primary:       #00205B;
+    --upb-primary-dark:  #00153d;
+    --upb-primary-light: #e8edf5;
+    --upb-accent:        #00A3E0;
+    --upb-accent-dark:   #007fb0;
+    --upb-accent-light:  #e0f4fd;
+    --upb-gray-50:       #f8fafc;
+    --upb-gray-100:      #f0f4f8;
+    --upb-gray-200:      #e2e8f0;
+    --upb-gray-400:      #94a3b8;
+    --upb-gray-600:      #475569;
+    --upb-gray-800:      #1e293b;
+    --upb-white:         #ffffff;
+    --upb-danger:        #dc3545;
+    --upb-danger-light:  #fff5f5;
+    --radius-sm:         6px;
+    --radius-md:         10px;
+    --radius-lg:         16px;
+    --radius-xl:         20px;
+    --shadow-card:       0 4px 24px rgba(0, 32, 91, 0.08);
+    --shadow-popup:      0 20px 60px rgba(0, 32, 91, 0.18);
+    --shadow-btn:        0 2px 8px rgba(0, 32, 91, 0.25);
+    --transition:        0.18s ease;
 }
 
-.fc-event.booked-slot .fc-event-title::before {
-    content: '🔒 ';
+/* ── Basis ──────────────────────────────────────────────────── */
+body {
+    font-family: 'Source Sans 3', sans-serif;
+    background-color: var(--upb-gray-100);
+    color: var(--upb-gray-800);
+    font-size: 15px;
+    line-height: 1.6;
 }
 
-/* Diagonale Streifen als "belegt"-Muster */
-.fc-event.booked-slot .fc-event-main {
-    background-image: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 4px,
-            rgba(255, 255, 255, 0.15) 4px,
-            rgba(255, 255, 255, 0.15) 8px
-    );
+/* ── Kalender-Wrapper ───────────────────────────────────────── */
+#calendar-wrapper {
+    background: var(--upb-white);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-card);
+    border-top: 4px solid var(--upb-primary);
 }
 
-/* Selektions-Highlight nutzt Bootstrap Primary */
-.fc-highlight {
-    background: rgba(var(--bs-primary-rgb), 0.15) !important;
+/* ── FullCalendar Overrides ─────────────────────────────────── */
+.fc {
+    font-family: 'Source Sans 3', sans-serif !important;
 }
 
-/* ---------------Buchungs-Popup--------------- */
-#booking-popup {
-    min-width: 340px;
-    z-index: 9999;
-    /* Stärkerer Schatten da kein Overlay mehr – Popup hebt sich trotzdem klar ab */
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35) !important;
+.fc .fc-toolbar-title {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: var(--upb-primary) !important;
+    letter-spacing: -0.2px;
 }
 
-/* -----------------------------------------------------
-   Eigene Buchungen: grün kennzeichnen
-   ----------------------------------------------------- */
+.fc .fc-button {
+    font-family: 'Source Sans 3', sans-serif !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    border: 1.5px solid var(--upb-gray-200) !important;
+    background: var(--upb-white) !important;
+    color: var(--upb-gray-600) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 6px 14px !important;
+    box-shadow: none !important;
+    transition: all var(--transition) !important;
+    text-transform: none !important;
+}
+
+.fc .fc-button:hover {
+    background: var(--upb-primary-light) !important;
+    border-color: var(--upb-primary) !important;
+    color: var(--upb-primary) !important;
+}
+
+.fc .fc-button-active,
+.fc .fc-button-primary.fc-button-active {
+    background: var(--upb-primary) !important;
+    border-color: var(--upb-primary) !important;
+    color: var(--upb-white) !important;
+    box-shadow: var(--shadow-btn) !important;
+}
+
+.fc .fc-today-button {
+    background: var(--upb-accent) !important;
+    border-color: var(--upb-accent) !important;
+    color: var(--upb-white) !important;
+    opacity: 1 !important;
+}
+
+.fc .fc-today-button:hover {
+    background: var(--upb-accent-dark) !important;
+    border-color: var(--upb-accent-dark) !important;
+}
+
+.fc-col-header-cell {
+    background: var(--upb-gray-50) !important;
+    border-bottom: 2px solid var(--upb-gray-200) !important;
+}
+
+.fc-col-header-cell-cushion {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    color: var(--upb-gray-600) !important;
+    padding: 10px 4px !important;
+    text-decoration: none !important;
+}
+
+.fc .fc-day-today {
+    background: var(--upb-accent-light) !important;
+}
+
+.fc .fc-day-today .fc-col-header-cell-cushion {
+    color: var(--upb-accent-dark) !important;
+}
+
+.fc-timegrid-slot {
+    height: 56px !important;
+}
+
+.fc-timegrid-slot-label-cushion {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: var(--upb-gray-400) !important;
+    padding-right: 10px !important;
+}
+
+.fc-event {
+    border: none !important;
+    border-left: 3px solid var(--upb-primary) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 4px 8px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    transition: filter var(--transition) !important;
+    cursor: pointer;
+}
+
+/* Eigene Buchungen (own-slot) → Akzentblau */
 .fc-event.own-slot {
-    background-color: var(--bs-success) !important;
-    border-color: var(--bs-success-border-subtle) !important;
-    cursor: pointer !important;
-    opacity: 0.9;
+    background: var(--upb-accent) !important;
+    box-shadow: 0 2px 8px rgba(0, 163, 224, 0.3) !important;
 }
 
-.fc-event.own-slot .fc-event-title::before {
-    content: '✅ ';
+/* Fremde Buchungen (booked-slot) → Dunkelblau */
+.fc-event.booked-slot {
+    background: var(--upb-primary) !important;
+    box-shadow: 0 2px 8px rgba(0, 32, 91, 0.25) !important;
+}
+
+.fc-event:hover {
+    filter: brightness(0.93) !important;
+}
+
+.fc-event-title {
+    color: var(--upb-white) !important;
+    font-weight: 600 !important;
+}
+
+.fc-event-time {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.72rem !important;
+}
+
+.fc-highlight {
+    background: rgba(0, 163, 224, 0.1) !important;
+    border: 1.5px dashed var(--upb-accent) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+.fc-timegrid-now-indicator-line {
+    border-color: var(--upb-accent) !important;
+    border-width: 2px !important;
+}
+
+.fc-timegrid-now-indicator-arrow {
+    border-top-color: var(--upb-accent) !important;
+    border-bottom-color: var(--upb-accent) !important;
+}
+
+/* ── Popup ──────────────────────────────────────────────────── */
+/*
+   Sichtbarkeit wird ausschließlich über Bootstraps d-none gesteuert.
+   Wenn d-none entfernt wird, ist das Popup sofort sichtbar.
+   position-fixed / top-50 / start-50 / translate-middle kommen
+   aus den Bootstrap-Utility-Klassen im HTML.
+*/
+#booking-popup {
+    width: 420px;
+    max-width: calc(100vw - 24px);
+    z-index: 10500;           /* über Bootstrap-Modals (max. 1055) */
+    border-top: 5px solid var(--upb-primary);
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-popup) !important;
+    animation: upb-popup-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Bootstrap's .rounded und .shadow werden durch !important oben überschrieben */
+
+@keyframes upb-popup-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+#booking-popup h5 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--upb-primary);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--upb-gray-200);
+    margin-bottom: 20px !important;
+}
+
+/* ── Overlay ────────────────────────────────────────────────── */
+#popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 20, 50, 0.45);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 10499;
+    animation: upb-fade-in 0.18s ease;
+}
+
+@keyframes upb-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Formular-Overrides ─────────────────────────────────────── */
+.form-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--upb-gray-600);
+    margin-bottom: 5px;
+}
+
+.form-control,
+.form-select {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.92rem;
+    border: 1.5px solid var(--upb-gray-200) !important;
+    border-radius: var(--radius-md) !important;
+    background-color: var(--upb-gray-50) !important;
+    color: var(--upb-gray-800);
+    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--upb-accent) !important;
+    box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.15) !important;
+    background-color: var(--upb-white) !important;
+}
+
+.form-control[readonly] {
+    background-color: var(--upb-gray-100) !important;
+    color: var(--upb-gray-600);
+    cursor: default;
+}
+
+/* ── Bootstrap-Button-Overrides ─────────────────────────────── */
+.btn {
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    border-radius: var(--radius-md) !important;
+    padding: 10px 20px;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.btn-primary {
+    background-color: var(--upb-primary) !important;
+    border-color: var(--upb-primary) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--upb-primary-dark) !important;
+    border-color: var(--upb-primary-dark) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 32, 91, 0.25) !important;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--upb-gray-100) !important;
+    border-color: var(--upb-gray-200) !important;
+    color: var(--upb-gray-600) !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--upb-gray-200) !important;
+    color: var(--upb-gray-800) !important;
+}
+
+.btn-outline-primary {
+    color: var(--upb-primary) !important;
+    border-color: var(--upb-primary) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--upb-primary) !important;
+    color: var(--upb-white) !important;
+}
+
+.btn-danger {
+    transition: filter var(--transition), transform var(--transition);
+}
+
+.btn-danger:hover {
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+}
+
+/* ── Fehlermeldung ──────────────────────────────────────────── */
+#popup-error {
+    border-left: 3px solid var(--upb-danger) !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ── Links ──────────────────────────────────────────────────── */
+a {
+    color: var(--upb-accent);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+a:hover {
+    color: var(--upb-accent-dark);
+    text-decoration: underline;
+}
+
+/* ── Card-Overrides ─────────────────────────────────────────── */
+.card {
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-card) !important;
+    border: none !important;
+}
+
+.card-header {
+    background: var(--upb-primary) !important;
+    color: var(--upb-white) !important;
+    font-weight: 700 !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+/* ── Badge ──────────────────────────────────────────────────── */
+.badge.bg-primary { background-color: var(--upb-primary) !important; }
+.badge.bg-info    { background-color: var(--upb-accent)  !important; }
+
+/* ── Alert ──────────────────────────────────────────────────── */
+.alert-upb {
+    background: var(--upb-primary-light);
+    border-left: 4px solid var(--upb-primary);
+    border-radius: var(--radius-md);
+    color: var(--upb-primary);
+    font-weight: 500;
+    padding: 12px 16px;
+}
+
+/* ── Bestätigungsseite ──────────────────────────────────────── */
+.upb-confirm-card {
+    background: var(--upb-white);
+    border-radius: var(--radius-lg);
+    padding: 48px 40px;
+    max-width: 540px;
+    margin: 60px auto;
+    box-shadow: var(--shadow-card);
+    border-top: 5px solid var(--upb-accent);
+    text-align: center;
+}
+
+.upb-confirm-card__icon {
+    width: 64px;
+    height: 64px;
+    background: var(--upb-accent-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 1.8rem;
+}
+
+.upb-confirm-card__title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--upb-primary);
+    margin-bottom: 8px;
+}
+
+.upb-confirm-card__subtitle {
+    color: var(--upb-gray-600);
+    margin-bottom: 28px;
+    font-size: 0.95rem;
+}
+
+.upb-detail-table { width: 100%; margin-bottom: 28px; text-align: left; }
+.upb-detail-table tr td { padding: 8px 12px; font-size: 0.9rem; }
+.upb-detail-table tr td:first-child {
+    font-weight: 700;
+    color: var(--upb-gray-600);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    width: 120px;
+}
+.upb-detail-table tr:not(:last-child) td {
+    border-bottom: 1px solid var(--upb-gray-100);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    body { padding: 0; }
+
+    #booking-popup {
+        width: calc(100vw - 24px);
+        padding: 24px 20px !important;
+    }
+
+    .upb-confirm-card {
+        margin: 24px 16px;
+        padding: 32px 24px;
+    }
+
+    .d-flex.gap-2.mt-3 {
+        flex-direction: column;
+    }
 }
