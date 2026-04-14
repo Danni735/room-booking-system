@@ -182,6 +182,8 @@ Die Spalte "user_id" in der "booking" wird noch nicht mit der Immatrikulationsnu
 
 Eine Universität ist international, da es allerdings keine Vorgaben zur Internationalisierung gegeben hat, sind die Kommentare und die Benutzeroberfläche aufgrund der Einfachheit hauptsächlich in Deutsch gehalten.
 
+Hinweise für den Nutzer bezüglich der Bedeutung der Farben im Kalender, das man nur 7 Tage im Voraus buchen kann, sowie ein Hinweis zu den Öffnungszeiten, ist noch denkbar.
+
 ## Dokumentation der REST Endpoint
 
 Die REST-API des Raumbuchungssystems umfasst drei Endpunkte unter der Basis-URL 
