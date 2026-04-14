@@ -90,10 +90,10 @@ if (Yii::$app->user->isGuest) {
         const maxDate = new Date(today);
         maxDate.setDate(today.getDate() + 8);
 
-        // Zeitslots 07:00 - 21:00 in 30-Minuten-Schritten
+        // Zeitslots 07:00 - 21:00 in 60-Minuten-Schritten
         const timeSlots = <?= json_encode(array_map(function($m) {
             return sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
-        }, range(7 * 60, 21 * 60, 30))) ?>;
+        }, range(7 * 60, 21 * 60, 60))) ?>;
 
         const startSelect = document.getElementById('input-start');
         const endSelect   = document.getElementById('input-end');
@@ -202,6 +202,7 @@ if (Yii::$app->user->isGuest) {
         const calendar = new FullCalendar.Calendar(calendarEl, {
             schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
             initialView: 'timeGridWeek',
+            slotDuration: '01:00:00',
             slotMinTime: '07:00:00',
             slotMaxTime: '21:00:00',
             allDaySlot: false,
@@ -295,7 +296,7 @@ if (Yii::$app->user->isGuest) {
 
         function roundToSlot(time) {
             const [h, m] = time.split(':').map(Number);
-            const rounded = Math.round((h * 60 + m) / 30) * 30;
+            const rounded = Math.round((h * 60 + m) / 60) * 60;
             const rh = Math.floor(rounded / 60);
             const rm = rounded % 60;
             const clamped = Math.min(Math.max(rh * 60 + rm, 7 * 60), 21 * 60);
