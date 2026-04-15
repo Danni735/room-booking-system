@@ -54,5 +54,8 @@ phpunit.phar
 /backend/runtime/*
 
 # Generierte Assets
-/frontend/web/assets/
-/backend/web/assets/
+/frontend/web/assets/*
+/backend/web/assets/*
+# Aber die .gitkeep-Datei behalten
+!frontend/web/assets/.gitkeep
+!backend/web/assets/.gitkeep
