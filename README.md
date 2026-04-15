@@ -69,6 +69,15 @@ php init
 ```
 → `0` für **Development** wählen, mit `yes` bestätigen
 
+**4. sqlite for dsn: main-local**
+common/config/main-local.php
+	-> replace
+
+" components' => [...
+'db' => [...
+		'dsn' => 'sqlite:' . dirname(__DIR__) . '/runtime/database.db',
+		...] ] "
+
 **Server starten**
 
 Terminal 1 – Frontend
