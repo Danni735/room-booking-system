@@ -1,13 +1,13 @@
 # Raumbuchungssytem mit FullCalendar Integration
 
 ## Anwendung & Technologien
-Das Raumbuchungssystem für die Universität Paderborn ermöglicht es eingeloggten Nutzerinnen und Nutzern, Räume über einen interaktiven Wochenkalender zu buchen, einzusehen und per individuellem Stornierungslink wieder freizugeben.
+Das Raumbuchungssystem ermöglicht es eingeloggten Nutzerinnen und Nutzern, Räume über einen interaktiven Wochenkalender zu buchen, einzusehen und per individuellem Stornierungslink wieder freizugeben.
 
 Die Anwendung wurde mit dem **Yii2 Advanced Template** (PHP) umgesetzt, das Frontend und Backend sauber voneinander trennt: Das Backend stellt eine REST-API bereit, die das Frontend per Fetch API asynchron konsumiert.
 
 Als Kalenderkomponente kommt **FullCalendar** zum Einsatz, das Klick- und Drag-Interaktionen direkt im Kalender ermöglicht.
 
-Die Oberfläche basiert auf **Bootstrap 5** und wurde vollständig im offiziellen Corporate Design der Universität Paderborn gestaltet – mit den Primärfarben Pantone 281 (`#00205B`) und Pantone 299 (`#00A3E0`).
+Die Oberfläche basiert auf **Bootstrap 5** mit den Primärfarben Pantone 281 (`#00205B`) und Pantone 299 (`#00A3E0`).
 
 Barrierefreiheit nach **WCAG 2.1 Stufe AA** wurde konsequent berücksichtigt, unter anderem durch ein vollständig tastatur- und screenreadertaugliches Buchungspopup (nicht getestet).
 
@@ -24,11 +24,16 @@ Barrierefreiheit nach **WCAG 2.1 Stufe AA** wurde konsequent berücksichtigt, un
 ## Installation
 
 ### Voraussetzungen
-- PHP ≥ 8.4 mit den Extensions: `pdo_sqlite`, `sqlite3`, `mbstring`, `curl`, `zip`
+- PHP ≥ 8.4 mit den Extensions: `pdo_sqlite`, `sqlite3`, `mbstring`, `curl`, `zip`, `xml` ``
 	- für Windows: in der php.ini die o.g. extensions aktivieren
 	- unter Linux:
-	``` sudo apt install php-sqlite3 php-mbstring php-curl php-zip ```
-	
+	``` 
+	  sudo apt update
+	  sudo apt install -y software-properties-common
+	  sudo LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php -y
+	  sudo apt update
+	  sudo apt install -y php8.4 php8.4-cli php8.4-sqlite3 php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip unzip git
+ 	```
 - Composer
 	- für Windows Composer downloaden
 	- unter Linux:
@@ -53,9 +58,16 @@ cd room-booking-system
 ```
 
 **2. Abhängigkeiten installieren**
+
 ```
 composer install
 ```
+
+**3. Das Projekt initialisieren**
+```
+php init
+```
+→ `0` für **Development** wählen, mit `yes` bestätigen
 
 **Server starten**
 
@@ -179,8 +191,6 @@ Eine "room" Tabelle gibt die "id" für eine beliebige Anzahl an Räumen vor.
 Diese ist mit der "booking" Tabelle verknüpft. Zum Zeitpunkt der Veröffentlichung ist es noch nicht möglich mehrere Räume zu buchen.
 
 Die Spalte "user_id" in der "booking" wird noch nicht mit der Immatrikulationsnummer oder Personalnummer gefüllt.
-
-Eine Universität ist international, da es allerdings keine Vorgaben zur Internationalisierung gegeben hat, sind die Kommentare und die Benutzeroberfläche aufgrund der Einfachheit hauptsächlich in Deutsch gehalten.
 
 Hinweise für den Nutzer bezüglich der Bedeutung der Farben im Kalender, das man nur 7 Tage im Voraus buchen kann, sowie ein Hinweis zu den Öffnungszeiten, ist noch denkbar.
 
