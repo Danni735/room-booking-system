@@ -15,6 +15,19 @@ class BookingController extends ActiveController
 
     public function behaviors()
     {
+        // CORS erlauben (Frontend → Backend)
+        $behaviors['corsFilter'] = [
+            'class' => \yii\filters\Cors::class,
+            'cors' => [
+                'Origin' => ['http://localhost:8080'],
+                'Access-Control-Request-Method' => ['GET', 'POST', 'DELETE', 'OPTIONS'],
+                // headers: { 'Content-Type': 'application/json' }
+                'Access-Control-Allow-Headers'   => ['Content-Type', 'X-Requested-With'],
+                'Access-Control-Allow-Credentials' => false,
+                'Access-Control-Max-Age'         => 3600,
+            ],
+        ];
+
         $behaviors = parent::behaviors();
 
         // JSON Response
@@ -22,16 +35,6 @@ class BookingController extends ActiveController
             'class' => ContentNegotiator::class,
             'formats' => [
                 'application/json' => Response::FORMAT_JSON,
-            ],
-        ];
-
-        // CORS erlauben (Frontend → Backend)
-        $behaviors['corsFilter'] = [
-            'class' => \yii\filters\Cors::class,
-            'cors' => [
-                'Origin' => ['http://localhost:8080'],
-                'Access-Control-Request-Method' => ['GET', 'POST', 'DELETE', 'OPTIONS'],
-                'Access-Control-Allow-Credentials' => false,
             ],
         ];
 
@@ -88,9 +91,51 @@ class BookingController extends ActiveController
         $booking->end_time   = $data['end_time']    ?? '';
         $booking->annotation = $data['annotation'] ?? null;
         $booking->user_id = Yii::$app->user->isGuest ? null : (Yii::$app->user->identity->student_id ?? Yii::$app->user->identity->personal_id ?? null);
+        // $booking->room_id,
+
+        // Transaktion + Lock: nur eine Anfrage gleichzeitig
+        /*$transaction = Yii::$app->db->beginTransaction();
+        try {
+            // Tabelle sperren für die Dauer der Prüfung
+            Yii::$app->db->createCommand(
+                'SELECT id FROM booking 
+             WHERE status != "cancelled"
+             AND start_time < :end 
+             AND end_time > :start
+             FOR UPDATE'  // <-- das ist der Lock
+            )->bindValues([
+                ':room'  => $booking->room_id,
+                ':start' => $booking->start_time,
+                ':end'   => $booking->end_time,
+            ])->queryAll();
+
+            if ($booking->save()) {
+                $transaction->commit();
+                // Weiterleitung zur Bestätigungsseite
+                Yii::$app->response->statusCode = 201;
+                return [
+                    'id'           => $booking->id,
+                    'name'        => $booking->name,
+                    'start'        => str_replace(' ', 'T', $booking->start_time),
+                    'end'          => str_replace(' ', 'T', $booking->end_time),
+                    'cancel_token' => $booking->cancel_token,
+                    'annotation' => $booking->annotation,
+                    'user_id' => $booking->user_id,
+                ];
+            } else {
+                $transaction->rollBack();
+                // Fehler zurückgeben
+                Yii::$app->response->statusCode = 422;
+                return ['errors' => $booking->errors];
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        }*/
 
         // Rückgabe
         if ($booking->save()) {
+            // hier werden die Daten ans Frontend übergeben
             Yii::$app->response->statusCode = 201;
             return [
                 'id'           => $booking->id,

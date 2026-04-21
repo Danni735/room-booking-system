@@ -2,7 +2,7 @@
 
 /** @var yii\web\View $this */
 
-$this->title = 'Raumbuchung – Universität Paderborn';
+$this->title = 'Raumbuchungssystem';
 
 use frontend\assets\CalendarAsset;
 use yii\helpers\Html;
@@ -530,6 +530,7 @@ $this->registerCssFile('@web/css/booking.css');
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    // Payload
                     name:       name,
                     annotation: annotation,
                     start_time: date + ' ' + start + ':00',

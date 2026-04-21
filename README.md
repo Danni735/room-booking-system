@@ -213,5 +213,71 @@ Bei Erfolg antwortet der Server mit den gespeicherten Daten inklusive eines einm
 
 Ist ein Zeitraum bereits belegt, gibt die API den Statuscode 422 mit einer Fehlermeldung zurück, die im Frontend direkt im Buchungspopup angezeigt wird. Die Stornierung erfolgt über POST /bookings/cancel mit dem Token als einzigem Parameter – ist der Token gültig, wird die Buchung gelöscht und eine Bestätigung zurückgegeben, andernfalls antwortet die API mit 404.
 
+
+## Deployment
+
+1. Der fertiggestellte Code wird via Git auf GitHub z.B. in eine neu erstellte Feature Branch hochgeladen.
+2. Wenn alles funktioniert, wird der Code auf die DEV Branch gebracht (Pull/ Merge Request).
+   2.1 Building, Testing und Deploy der Application (z.B. mit GitHub Actions)
+3. Von der Dev Branch geht es zur Testing Branch.
+4. Von der Testing Branch geht es zur Master/Main Branch.
+5. Checking und Monitoring nach dem Deployment kontinuierlich.
+
+Bedingungen:
+- alle geheimen Werte in die eine .env Datei auslagern (DB-Daten, App_Key (CookieValidationKey))
+- .env Datei in die .gitignore schreiben (niemals committen), per SSH einloggen und hochladen oder anlegen
+  - fällt hier weg, da die generierten Files wie z.B. /frontend/web/index.php und /backend/web/index.php für die Production ausgeschlossen werden.
+- Yii_DEBUG = false und Yii_ENV = production
+- $ composer require vlucas/phpdotenv um die Variablen `$_ENV` and `$_SERVER` zu nutzen
+	- Lädt die .env-Datei und macht sie als $_ENV verfügbar (common/config/bootstrap.php)
+	```
+ 	$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__, 2));
+	$dotenv->load();
+	```
+- composer install --no-dev -> Vendor wird auf dem Server neu gebaut
+
+## Buchungen
+
+- Hauptrprüfung im Booking-Model
+- Unique Constraint - Datenbank
+ z.B. nur eine Anfrage gleichzeitig durchlassen
+im Booking-Controller -> actionCreate(){} -> Tabelle wird für die Dauer der Prüfung gesperrt
+
+## Daten werden vom Backend ans Frontend übergeben im Booking Controller
+``` 
+	if ($booking->save()) {
+	// hier werden die Daten ans Frontend übergeben
+		Yii::$app->response->statusCode = 201;
+		return [
+		'id'           => $booking->id,
+		'name'        => $booking->name,
+		...
+		];
+	}
+```
+
+**Hier wird abgebrochen:**
+	```
+	Yii::$app->response->statusCode = 422;
+	return ['errors' => $booking->errors];
+	```
+**Fehlermeldung muss in der Frontend index.php noch abgefangen werden.**
+if (response.status === 201) {
+
+} else if (response.status === 422) {
+// data = { errors: { start_time: ["Zeitraum bereits gebucht"] } }
+
+} else {
+// DB-Exception oder sonstiger Server-Fehler
+document.getElementById('fehler-meldung').textContent = 'Server-Fehler, bitte erneut versuchen.';
+}
+
+**mögliche CORS Fehler**
+
+- $behaviors muss in BookingController.php als erstes definiert werden
+- weil ich im header diesen Header schicke -> headers: { 'Content-Type': 'application/json' } 
+  - muss ich 'Access-Control-Allow-Headers'   => ['Content-Type', 'X-Requested-With'], in die behaviors setzen
+	denn Browser blockt die Anfrage beim Preflight
+
 ## Lizenzen
 - [FullCalendar](https://fullcalendar.io/license) – Non-Commercial License
